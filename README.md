@@ -1,4 +1,4 @@
-# Simple Port Scanne
+# Simple Port Scanner
 
 Simple Port Scanner is a Python-based utility that allows users to scan network ports on a specified IP address. The tool is designed to be easy to use and provides a range of scanning options to suit different needs.
 
