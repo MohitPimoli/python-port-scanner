@@ -4,6 +4,7 @@ import socket
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 import os
+import nmap
 
 PORT_RANGES = {
     "well-known": (0, 1023),
@@ -14,10 +15,16 @@ PORT_RANGES = {
 }
 
 
+def print_banner():
+    print("\n\n\n\033[1;32;40m" + "*" * 50)
+    print("*" + " " * 16 + "Alpha Port Scanner" + " " * 14 + "*")
+    print("*" * 50)
+    print("\033[0m")
+
+
 def print_help():
-    print("\033[1;32;40mSimple Port Scanner Help\033[0m")
-    print("\033[1;37;40mUsage:\033[0m python3 scanner.py <IP_Address> [Option]")
-    print("\033[1;34;40mOptions:\033[0m")
+    print("\n\033[1;37;40mUsage:\033[0m python3 scanner.py <IP_Address> [Option]")
+    print("\n\033[1;34;40mOptions:\033[0m")
     print("  -wn, --well-known   Scan for well-known ports (0-1023)")
     print("  -r, --registered    Scan for registered ports (1024-49151)")
     print("  -d, --dynamic       Scan for dynamic/private ports (49152-65535)")
@@ -27,33 +34,38 @@ def print_help():
     print(
         "  -o, --output        Save the results to a specified path Example -o /home/user/output.txt"
     )
-    print("\033[1;34;40mExample:\033[0m python3 scanner.py 192.168.1.1 --well-known")
+    print("\n\033[1;34;40mExample:\033[0m python3 scanner.py 192.168.1.1 --well-known")
     print(
-        "\033[1;31;40mNote:\033[0m Ensure you have the necessary permissions to scan the target system."
+        "\n\033[1;31;40mNote:\033[0m Ensure you have the necessary permissions to scan the target system."
     )
 
 
 def scan_port(ip, port, output_file=None):
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(0.5)  # Adjust timeout as needed
-            result = s.connect_ex((ip, port))
-            if result == 0:
-                open_port_info = f"Port {port} is open\n"
-                print(open_port_info, end="")
-                if output_file:
-                    with open(output_file, "a") as file:
-                        file.write(open_port_info)
-    except socket.error:
-        pass  # Handle errors if needed
+        nm = nmap.PortScanner()
+        nm.scan(ip, str(port))
+        if nm[ip]["tcp"][port]["state"] == "open":
+            service = nm[ip]["tcp"][port]["name"]
+            port_info = f"{port}\topen\t{service}"
+            print(port_info)
+            if output_file:
+                with open(output_file, "a") as file:
+                    if file.tell() == 0:  # Check if the file is empty
+                        file.write("Port Status Service\n")  # Write the header
+                    file.write(port_info + "\n")
+
+    except Exception as e:
+        print(f"Error scanning port {port}: {e}")
 
 
 # Parse arguments and set port range
 if len(sys.argv) < 2:
-    print("Invalid number of arguments.")
+    print_banner()
     print_help()
+    print("\n\n\033[1;31;40mInvalid number of arguments.\033[0m\n\n")
     sys.exit()
 elif sys.argv[1] in ("-h", "--help"):
+    print_banner()
     print_help()
     sys.exit()
 
@@ -63,10 +75,12 @@ output_path = None
 
 # Parse arguments and set port range
 if len(sys.argv) < 2:
-    print("Invalid number of arguments.")
+    print_banner()
     print_help()
+    print("Invalid number of arguments.")
     sys.exit()
 elif sys.argv[1] in ("-h", "--help"):
+    print_banner()
     print_help()
     sys.exit()
 
@@ -96,12 +110,15 @@ for arg in sys.argv[2:]:
             print("Please provide a specific path with a file name for the output.")
             sys.exit()
 
+print_banner()
 
 print("-" * 50)
 print("Scanning target: " + target)
 print("Time started: " + str(datetime.now()))
 print("Scanning port range: {}-{}".format(port_range[0], port_range[1]))
 print("-" * 50)
+print("\n")
+print("port\tstatus\tservice")
 
 with ThreadPoolExecutor(max_workers=100) as executor:  # Adjust max_workers as needed
     for port in range(port_range[0], port_range[1] + 1):
