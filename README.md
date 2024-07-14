@@ -43,6 +43,10 @@ Save the scan results to a specific file:
 - Python 3.x
 - Access to the network and permissions to perform port scanning
 
+# Demo
+- ![image](https://github.com/user-attachments/assets/88d4abd0-f727-4e2f-adb0-dcd8fe611220)
+- ![image](https://github.com/user-attachments/assets/50675378-d712-46c7-b8e6-9a10a930b951)
+
 # Disclaimer
 
 Ensure you have the necessary permissions to scan the target system. Unauthorized scanning can be illegal or considered malicious activity.
